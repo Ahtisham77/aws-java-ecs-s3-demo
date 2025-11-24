@@ -1,14 +1,14 @@
-name: Terraform Apply - Dev
+name: "Terraform Apply - Dev"
 
 on:
   pull_request:
     branches:
       - main
     types:
-      - closed   
+      - closed
 
 env:
-  TF_IN_AUTOMATION: "True"
+  TF_IN_AUTOMATION: "true"
 
 permissions:
   contents: read
@@ -21,19 +21,42 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      # Configure AWS using your IAM user's credentials
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1   
+          aws-region: us-east-1   # change if your region is different
 
-      # Run the composite action that downloads tfplan + apply + comment
-      - name: Terraform Apply
-        uses: ./.github/workflows/dev-pr-apply
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          pr_id: ${{ github.event.pull_request.number }}
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        working-directory: infra/env/dev
+        run: terraform init
+
+      - name: Terraform Apply
+        id: apply
+        working-directory: infra/env/dev
+        run: |
+          terraform apply -auto-approve -no-color > apply.txt
+          echo 'APPLY<<EOF' >> "$GITHUB_OUTPUT"
+          cat apply.txt >> "$GITHUB_OUTPUT"
+          echo 'EOF' >> "$GITHUB_OUTPUT"
+
+      - name: Comment apply result on PR
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            Terraform Apply:
+
+            ```
+            ${{ steps.apply.outputs.APPLY }}
+            ```
