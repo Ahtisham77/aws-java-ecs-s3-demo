@@ -1,0 +1,140 @@
+name: "Terraform Plan (dev) on PR"
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [ opened, synchronize, reopened ]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  terraform-plan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Terraform plan (dev)
+        uses: ./.github/actions/dev-pr-plan
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          pr_id: ${{ github.event.pull_request.number }}
+
+
+
+# name: 'Terraform setup and plan'
+# description: 'Setup Terraform and creates plan'
+
+# inputs:
+#   github_token: 
+#     description: 'GitHub token for authentication'
+#     required: true
+#   pr_id:
+#     description: 'Pull request ID'
+#     required: true
+
+# runs:
+#   using: "composite"
+#   steps:
+#     # Step 1: Setup Terraform
+#     - name: Setup Terraform
+#       uses: hashicorp/setup-terraform@v2
+#       with:
+#         terraform_wrapper: false
+
+#     # Step 2: Initialize Terraform
+#     - name: Terraform Init
+#       id: init
+#       shell: bash
+#       working-directory: infra/env/dev
+#       run: |
+#         terraform init
+
+#     # Step 3: Generate Terraform Plan 
+#     - name: Terraform Plan
+#       id: plan
+#       shell: bash
+#       working-directory: infra/env/dev
+#       run: |
+#         echo 'plan<<EOF' >> $GITHUB_OUTPUT
+#         terraform plan -no-color -out=tfplan >> $GITHUB_OUTPUT
+#         echo 'EOF' >> $GITHUB_OUTPUT
+
+#     # Step 4: Upload tfplan as an Artifact    
+#     - name: Save Artifact
+#       id: save-artifact
+#       uses: actions/upload-artifact@v4
+#       with:
+#         name: ${{ inputs.pr_id }}-tf-plan  
+#         path: infra/env/dev
+
+
+#     # BUILD PLAN COMMENT FILE
+#     - name: Build plan comment file
+#       shell: bash
+#       working-directory: infra/env/dev
+#       run: |
+#         echo "## Terraform Plan for PR #${{ inputs.pr_id }}" > plan-comment.md
+#         echo "" >> plan-comment.md
+#         echo '```terraform' >> plan-comment.md
+#         terraform show -no-color tfplan >> plan-comment.md
+#         echo '```' >> plan-comment.md    
+
+#     # Step 5: Create a Detailed Summary of the Terraform Plan
+#     - name: Create Terraform Plan Summary
+#       id: plan-summary
+#       shell: bash
+#       working-directory: infra/env/dev
+#       run: |
+#         TERRAFORM_PLAN=$(terraform show -no-color tfplan)
+#         delimiter="$(openssl rand -hex 8)"
+#         echo "summary<<${delimiter}" >> $GITHUB_OUTPUT
+#         echo "## Terraform Plan Output" >> $GITHUB_OUTPUT
+#         echo "<details><summary>Click to expand</summary>" >> $GITHUB_OUTPUT
+#         echo "" >> $GITHUB_OUTPUT
+#         echo '```terraform' >> $GITHUB_OUTPUT
+#         echo "$TERRAFORM_PLAN" >> $GITHUB_OUTPUT
+#         echo '```' >> $GITHUB_OUTPUT
+#         echo "</details>" >> $GITHUB_OUTPUT
+#         echo "${delimiter}" >> $GITHUB_OUTPUT
+
+#     # Step 6: Publish Plan Summary to Task Summary
+#     - name: Publish Plan Summary to Task Summary
+#       shell: bash
+#       env:
+#         SUMMARY: ${{ steps.plan-summary.outputs.summary }}
+#       run: echo "$SUMMARY" >> $GITHUB_STEP_SUMMARY
+
+#     # # Step 7: Comment the Terraform Plan on the PR
+#     # - name: Comment Plan
+#     #   id: comment-plan
+#     #   uses: peter-evans/create-or-update-comment@v2
+#     #   with:
+#     #     token: ${{ inputs.github_token }}
+#     #     issue-number: ${{ inputs.pr_id }}
+#     #     body: |
+#     #       Terraform Plan:
+
+#     #       ```
+#     #       ${{ steps.plan.outputs.plan }}
+#     #       ```
+
+#     #       Plan saved to GH artifacts.
+ 
+#     # COMMENT USING A FILE
+#     - name: Comment Plan
+#       uses: peter-evans/create-or-update-comment@v2
+#       with:
+#         token: ${{ inputs.github_token }}
+#         issue-number: ${{ inputs.pr_id }}
+#         body-file: infra/env/dev/plan-comment.md
