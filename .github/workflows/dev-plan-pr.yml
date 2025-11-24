@@ -1,0 +1,35 @@
+name: Terraform Plan - Dev
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'infra/**'
+
+# Permissions required for GitHub Actions
+permissions:
+  contents: read         
+  pull-requests: write  
+
+jobs:
+  terraform_plan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Configure AWS using your IAM user's access key + secret
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1   
+
+      
+      - name: Terraform Plan
+        uses: ./.github/actions/dev-pr-plan
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}             
+          pr_id: ${{ github.event.pull_request.number }}        

@@ -1,37 +1,62 @@
-name: "Terraform Apply (dev) after merge"
+name: "Terraform setup and apply (dev)"
+description: "Applies a terraform plan file from an artifact for infra/env/dev"
 
-on:
-  pull_request:
-    branches: [ main ]
-    types: [ closed ]
+inputs:
+  github_token:
+    description: 'GitHub secret'
+    required: true
+  pr_id:
+    description: 'Pull request ID'
+    required: true
 
-permissions:
-  contents: read
-  pull-requests: write
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_wrapper: false
 
-jobs:
-  terraform-apply:
-    # Only run if the PR was actually merged into main
-    if: github.event.pull_request.merged == true
-    runs-on: ubuntu-latest
+    - name: Terraform Init
+      id: init
+      shell: bash
+      working-directory: infra/env/dev/
+      run: terraform init
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    - name: Download Plan
+      id: download-plan
+      uses: dawidd6/action-download-artifact@v4
+      with:
+        github_token: ${{ inputs.github_token }}
+        workflow: dev-plan-pr.yml   # must match the workflow file name below
+        pr: ${{ inputs.pr_id }}
+        name: ${{ inputs.pr_id }}-tf-plan
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1   # same region as infra
+    - name: Move tfplan to terraform directory
+      shell: bash
+      run: mv ${{ inputs.pr_id }}-tf-plan/tfplan infra/env/dev/
 
-      - name: Terraform apply (dev)
-        uses: ./.github/actions/dev-pr-apply
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          pr_id: ${{ github.event.pull_request.number }}
+    - name: Terraform Apply
+      id: apply
+      shell: bash
+      working-directory: infra/env/dev/
+      run: |
+        echo 'apply<<EOF' >> $GITHUB_OUTPUT
+        terraform apply -input=false -no-color tfplan >> $GITHUB_OUTPUT
+        echo 'EOF' >> $GITHUB_OUTPUT
 
+    - name: Comment Apply
+      id: comment-apply
+      uses: peter-evans/create-or-update-comment@v4
+      with:
+        token: ${{ inputs.github_token }}
+        issue-number: ${{ inputs.pr_id }}
+        body: |
+          Terraform Apply:
+
+          ```
+          ${{ steps.apply.outputs.apply }}
+          ```
 
 
 
