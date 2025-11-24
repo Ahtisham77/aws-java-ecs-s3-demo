@@ -4,7 +4,6 @@ terraform {
     key     = "env/dev/terraform.tfstate"
     region  = "us-east-1"
     encrypt = true
-    profile = "dev"
   }
 
   required_version = ">= 1.5.0"

@@ -33,7 +33,7 @@ jobs:
 
       # Run the composite action that downloads tfplan + apply + comment
       - name: Terraform Apply
-        uses: ./.github/actions/dev-pr-apply
+        uses: ./.github/workflows/dev-pr-apply
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           pr_id: ${{ github.event.pull_request.number }}
