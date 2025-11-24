@@ -7,3 +7,7 @@ output "website_endpoint" {
   value       = aws_s3_bucket_website_configuration.this.website_endpoint
   description = "Public website endpoint for the frontend"
 }
+output "bucket_arn" {
+  description = "ARN of the frontend S3 bucket"
+  value       = aws_s3_bucket.this.arn
+}

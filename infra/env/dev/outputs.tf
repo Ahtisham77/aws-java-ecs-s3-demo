@@ -39,17 +39,17 @@ output "alb_zone_id" {
   value       = module.alb.zone_id
 }
 
-# output "ecs_cluster_name" {
-#   description = "Name of ECS cluster"
-#   value       = module.ecs_cluster.name
-# }
+output "ecs_cluster_name" {
+  description = "Name of ECS cluster"
+  value       = module.ecs_cluster.name
+}
 
-# output "ecs_cluster_arn" {
-#   description = "ARN of ECS cluster"
-#   value       = module.ecs_cluster.arn
-# }
+output "ecs_cluster_arn" {
+  description = "ARN of ECS cluster"
+  value       = module.ecs_cluster.arn
+}
 
-# output "ecs_cluster_id" {
-#   description = "ID of ECS cluster"
-#   value       = module.ecs_cluster.id
-# }
+output "ecs_cluster_id" {
+  description = "ID of ECS cluster"
+  value       = module.ecs_cluster.id
+}
