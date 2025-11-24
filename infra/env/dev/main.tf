@@ -7,6 +7,7 @@ locals {
   project = "aws-java-ecs-s3-demo"
   env     = var.env
   region  = var.region
+  test    = "testing"
 
   name = "${local.project}-${local.env}"
 
@@ -372,5 +373,11 @@ module "ecs_service" {
 module "frontend_s3" {
   source      = "../../modules/aws-frontend-s3"
   bucket_name = "${local.name}-frontend"
+  tags        = local.tags
+}
+
+module "frontend_s3_test" {
+  source      = "../../modules/aws-frontend-s3"
+  bucket_name = "${local.name}-frontend-dev-test2781"
   tags        = local.tags
 }
