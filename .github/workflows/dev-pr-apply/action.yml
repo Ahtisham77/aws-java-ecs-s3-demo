@@ -1,5 +1,5 @@
 name: "Terraform setup and apply (dev)"
-description: "Applies a terraform plan file from an artifact for infra/env/dev"
+description: "Applies a terraform plan file from an artifact"
 
 inputs:
   github_token:
@@ -23,21 +23,32 @@ runs:
       working-directory: infra/env/dev/
       run: terraform init
 
+    # Download tfplan artifact created by dev-plan-pr.yml
     - name: Download Plan
       id: download-plan
       uses: dawidd6/action-download-artifact@v4
       with:
         github_token: ${{ inputs.github_token }}
-        workflow: dev-plan-pr.yml   # must match the workflow file name below
+        workflow: dev-plan-pr.yml
         pr: ${{ inputs.pr_id }}
         name: ${{ inputs.pr_id }}-tf-plan
+        if_no_artifact_found: ignore   # don't fail if there was no plan
 
-    - name: Move tfplan to terraform directory
+    # Decide whether there is anything to apply
+    - name: Decide whether to apply
+      id: decide-apply
       shell: bash
-      run: mv ${{ inputs.pr_id }}-tf-plan/tfplan infra/env/dev/
+      run: |
+        if [ "${{ steps.download-plan.outputs.found_artifact }}" != "true" ]; then
+          echo "no_plan=true" >> $GITHUB_OUTPUT
+          echo "No plan artifact found – probably PR didn't change infra. Skipping apply."
+        else
+          echo "no_plan=false" >> $GITHUB_OUTPUT
+        fi
 
     - name: Terraform Apply
       id: apply
+      if: steps.decide-apply.outputs.no_plan == 'false'
       shell: bash
       working-directory: infra/env/dev/
       run: |
@@ -45,8 +56,20 @@ runs:
         terraform apply -input=false -no-color tfplan >> $GITHUB_OUTPUT
         echo 'EOF' >> $GITHUB_OUTPUT
 
+    # Optional: nice summary in the Checks tab
+    - name: Publish Apply Summary
+      if: steps.decide-apply.outputs.no_plan == 'false'
+      shell: bash
+      env:
+        APPLY: ${{ steps.apply.outputs.apply }}
+      run: |
+        echo "## Terraform Apply Output" >> $GITHUB_STEP_SUMMARY
+        echo '```terraform' >> $GITHUB_STEP_SUMMARY
+        echo "$APPLY" >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
+
     - name: Comment Apply
-      id: comment-apply
+      if: steps.decide-apply.outputs.no_plan == 'false'
       uses: peter-evans/create-or-update-comment@v4
       with:
         token: ${{ inputs.github_token }}
@@ -57,6 +80,18 @@ runs:
           ```
           ${{ steps.apply.outputs.apply }}
           ```
+
+    - name: Comment skipped apply
+      if: steps.decide-apply.outputs.no_plan == 'true'
+      uses: peter-evans/create-or-update-comment@v4
+      with:
+        token: ${{ inputs.github_token }}
+        issue-number: ${{ inputs.pr_id }}
+        body: |
+          Terraform Apply skipped:
+
+          - No Terraform plan artifact was found for this PR.
+          - Most likely the PR did not modify anything under `infra/`, so there is nothing to apply.
 
 
 
