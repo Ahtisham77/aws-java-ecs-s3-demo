@@ -115,7 +115,7 @@ data "aws_iam_policy_document" "codebuild_app" {
     resources = ["*"]
   }
 
-  # STS identity (used in buildspec)
+  # STS identity
   statement {
     effect = "Allow"
     actions = [
@@ -159,7 +159,7 @@ resource "aws_codebuild_project" "app_build_deploy" {
       value = aws_ecr_repository.backend.repository_url
     }
 
-    # We know the names based on how you created them
+ 
     environment_variable {
       name  = "ECS_CLUSTER_NAME"
       value = "${local.name}-cluster"

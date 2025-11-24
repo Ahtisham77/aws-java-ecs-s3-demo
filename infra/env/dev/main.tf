@@ -187,7 +187,7 @@ module "alb" {
         matcher             = "200-399"
       }
 
-      # ECS will attach tasks to this TG, so nothing attached from ALB side
+      
       create_attachment = false
     }
   }
@@ -201,7 +201,7 @@ module "ecs_cluster" {
 
   cluster_name = "${local.name}-cluster"
 
-  # Fargate capacity providers (same style as official example)
+  # Fargate capacity providers
   fargate_capacity_providers = {
     FARGATE = {
       default_capacity_provider_strategy = {
@@ -263,7 +263,7 @@ resource "aws_cloudwatch_log_group" "ecs" {
   tags              = local.tags
 }
 
-# Our own Fargate task definition – this is where port 8080 is defined
+# Our own Fargate task definition 
 resource "aws_ecs_task_definition" "backend" {
   family                   = "${local.name}-task"
   network_mode             = "awsvpc"
@@ -297,7 +297,7 @@ resource "aws_ecs_task_definition" "backend" {
         }
       }
 
-      # DB wiring – I’ve renamed these to generic DB_* so it’s not “Spring-specific”
+     
       environment = [
         {
           name  = "DB_URL"
@@ -325,17 +325,17 @@ module "ecs_service" {
   name        = "${local.name}-service"
   cluster_arn = module.ecs_cluster.arn
 
-  # Use the task definition we manage above
+ 
   create_task_definition = false
   task_definition_arn    = aws_ecs_task_definition.backend.arn
 
   desired_count          = 2
   enable_execute_command = true
 
-  # Run tasks in private subnets
+ 
   subnet_ids = module.network.private_subnets
 
-  # Security group: ALB → ECS, plus outbound
+ 
   security_group_rules = {
     alb_ingress = {
       description              = "Allow ALB to reach ECS tasks"
