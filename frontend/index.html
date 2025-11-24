@@ -16,7 +16,7 @@
   <script>
     async function send() {
       const name = document.getElementById('name').value || 'world';
-      const backendBase = 'http://localhost:8080';
+      const backendBase = 'http://aws-java-ecs-s3-demo-dev-alb-1542269407.us-east-1.elb.amazonaws.com';
       const url = backendBase + '/message?name=' + encodeURIComponent(name);
 
       try {
