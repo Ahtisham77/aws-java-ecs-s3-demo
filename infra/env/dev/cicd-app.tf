@@ -71,6 +71,7 @@ data "aws_iam_policy_document" "codebuild_app" {
       "ecr:PutImage",
       "ecr:CompleteLayerUpload",
       "ecr:UploadLayerPart",
+      "ecr:InitiateLayerUpload",
       "ecr:DescribeRepositories",
       "ecr:DescribeImages",
     ]
