@@ -357,7 +357,3 @@ resource "aws_codepipeline" "app" {
 
   tags = local.tags
 }
-
-
-
-
