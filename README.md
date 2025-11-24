@@ -11,34 +11,6 @@ Small demo application that shows how to:
 
 ---
 
-1. Repository layout
-.
-├── backend/                # Java HTTP backend
-│   ├── src/Main.java
-│   └── Dockerfile          # Multi-stage build using Amazon Corretto 21
-├── frontend/               # Static frontend (HTML + JS)
-│   └── index.html
-├── infra/
-│   ├── bootstrap-dev/      # (optional) remote state/bootstrap
-│   ├── env/
-│   │   ├── dev/            # Dev environment Terraform
-│   │   │   ├── main.tf     # VPC, ECS, ALB, S3, RDS wiring
-│   │   │   ├── backend.tf  # RDS bits
-│   │   │   ├── cicd-app.tf # CodePipeline + CodeBuild for app
-│   │   │   ├── providers.tf
-│   │   │   ├── variables.tf
-│   │   │   └── outputs.tf
-│   │   ├── staging/        # placeholders
-│   │   └── prod/           # placeholders
-│   └── modules/            # Reusable Terraform modules
-│       ├── aws-vpc/
-│       ├── aws-ecs/
-│       ├── aws-rds/
-│       └── aws-frontend-s3/
-└── .github/
-    └── workflows/          # Terraform plan/apply via GitHub Actions
-    
-
 2. What the app does
 Backend
 
