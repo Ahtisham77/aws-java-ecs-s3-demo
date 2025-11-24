@@ -36,7 +36,7 @@ runs:
         echo 'EOF' >> $GITHUB_OUTPUT
 
     # Step 4: Upload tfplan as an Artifact
-    - name: Save Artifact
+   - name: Save Artifact
       id: save-artifact
       uses: actions/upload-artifact@v4
       with:
