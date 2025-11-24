@@ -29,7 +29,7 @@ jobs:
 
       
       - name: Terraform Plan
-        uses: ./.github/actions/dev-pr-plan
+        uses: ./.github/workflows/dev-pr-plan
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}             
           pr_id: ${{ github.event.pull_request.number }}        
