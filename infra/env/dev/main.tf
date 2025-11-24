@@ -375,8 +375,4 @@ module "frontend_s3" {
   tags        = local.tags
 }
 
-module "frontend_s3_test" {
-  source      = "../../modules/aws-frontend-s3"
-  bucket_name = "${local.name}-frontend-dev-test2hgvs"
-  tags        = local.tags
-}
+
