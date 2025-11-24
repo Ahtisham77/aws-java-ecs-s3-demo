@@ -185,8 +185,7 @@ resource "aws_codebuild_project" "app_build_deploy" {
           commands:
             - echo "Logging in to Amazon ECR..."
             - ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-            - aws ecr get-login-password --region $AWS_REGION \
-                | docker login --username AWS --password-stdin "$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
+            - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin "$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
 
         build:
           commands:
@@ -199,11 +198,7 @@ resource "aws_codebuild_project" "app_build_deploy" {
         post_build:
           commands:
             - echo "Triggering ECS deployment..."
-            - aws ecs update-service \
-                --cluster "$ECS_CLUSTER_NAME" \
-                --service "$ECS_SERVICE_NAME" \
-                --force-new-deployment \
-                --region $AWS_REGION
+            - aws ecs update-service --cluster "$ECS_CLUSTER_NAME" --service "$ECS_SERVICE_NAME" --force-new-deployment --region $AWS_REGION
 
             - echo "Syncing frontend to S3..."
             - cd "$CODEBUILD_SRC_DIR/frontend"
