@@ -172,8 +172,8 @@ resource "aws_codebuild_project" "app_build_deploy" {
 
     environment_variable {
       name  = "FRONTEND_BUCKET"
-      value = module.frontend_s3.bucket_arn
-    }
+      value = module.frontend_s3.bucket_name
+}
   }
 
   source {
@@ -331,6 +331,7 @@ resource "aws_codepipeline" "app" {
         FullRepositoryId     = "Ahtisham77/aws-java-ecs-s3-demo"
         BranchName           = "main"
         OutputArtifactFormat = "CODE_ZIP"
+        DetectChanges        = "true"
       }
     }
   }
