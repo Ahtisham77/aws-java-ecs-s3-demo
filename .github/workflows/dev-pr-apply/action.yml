@@ -32,7 +32,8 @@ runs:
         workflow: dev-plan-pr.yml
         pr: ${{ inputs.pr_id }}
         name: ${{ inputs.pr_id }}-tf-plan
-        if_no_artifact_found: ignore   # don't fail if there was no plan
+         path: infra/env/dev
+        if_no_artifact_found: ignore  
 
     # Decide whether there is anything to apply
     - name: Decide whether to apply
@@ -56,7 +57,7 @@ runs:
         terraform apply -input=false -no-color tfplan >> $GITHUB_OUTPUT
         echo 'EOF' >> $GITHUB_OUTPUT
 
-    # Optional: nice summary in the Checks tab
+    
     - name: Publish Apply Summary
       if: steps.decide-apply.outputs.no_plan == 'false'
       shell: bash
@@ -94,64 +95,3 @@ runs:
           - Most likely the PR did not modify anything under `infra/`, so there is nothing to apply.
 
 
-
-# name: "Terraform setup and apply"
-# description: "Applies a terraform plan file from an artifact"
-
-# inputs:
-#   github_token: 
-#     description: 'GitHub secret'
-#     required: true
-#   pr_id:
-#     description: 'Pull request ID'
-#     required: true
-
-# runs:
-#   using: "composite"
-#   steps:
-#     - name: Setup Terraform
-#       uses: hashicorp/setup-terraform@v2
-#       with:
-#         terraform_wrapper: false
-
-#     - name: Terraform Init
-#       id: init
-#       shell: bash  
-#       working-directory: infra/env/dev
-#       run: |
-#         terraform init
-
-#     - name: Download Plan
-#       id: download-plan
-#       uses: dawidd6/action-download-artifact@v4
-#       with:
-#         github_token: ${{ inputs.github_token }}
-#         workflow: dev-plan-pr.yaml
-#         pr: ${{ inputs.pr_id }}
-#         name: ${{ inputs.pr_id }}-tf-plan
-
-#     - name: Move tfplan to terraform directory
-#       shell: bash  
-#       run: mv ${{ inputs.pr_id }}-tf-plan/tfplan infra/env/dev
-
-#     - name: Terraform Apply
-#       id: apply
-#       shell: bash   
-#       working-directory: infra/env/dev
-#       run: |
-#         echo 'apply<<EOF' >> $GITHUB_OUTPUT
-#         terraform apply -input=false -no-color tfplan >> $GITHUB_OUTPUT
-#         echo 'EOF' >> $GITHUB_OUTPUT
-
-#     - name: Comment Apply
-#       id: comment-apply
-#       uses: peter-evans/create-or-update-comment@v2
-#       with:
-#         token: ${{ inputs.github_token }}
-#         issue-number: ${{ inputs.pr_id }}
-#         body: |
-#           Terraform Apply:
-
-#           ```
-#           ${{ steps.apply.outputs.apply }}
-#           ```
